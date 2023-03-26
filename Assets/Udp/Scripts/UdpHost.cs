@@ -6,13 +6,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Udp
 {
     public class UdpHost : MonoBehaviour
     {
-        public static event Action<string> OnReceiveMsg;
-        public static event Action<string> OnClientError;
+        public UnityEvent<string> OnReceive;
+        public UnityEvent<string> OnClientError;
 
         [SerializeField, Tooltip("Set to true if you want the debug logs to show in the console")] 
         protected bool _consoleLogsEnabled = false;
@@ -55,7 +56,7 @@ namespace Udp
         /// </summary>
         public virtual void Close()
         {
-            _connected = false; //Set to false, the thread will do the rest
+            _connected = false; //Set to false, the thread will handle the rest
         }
 
         #region Settings
@@ -78,7 +79,7 @@ namespace Udp
         /// Send a message to the client
         /// </summary>
         /// <param name="msg"></param>
-        public virtual void SendMsg(string msg)
+        public virtual void Send(string msg)
         {
             if (_connected)
             {
@@ -95,11 +96,11 @@ namespace Udp
         /// Called when a message is received
         /// </summary>
         /// <param name="message">string msg</param>
-        public virtual void MessageReceived(string message)
+        public virtual void Receive(string message)
         {
             _message = message;
 
-            OnReceiveMsg?.Invoke(message);
+            OnReceive.Invoke(message);
         }
 
         /// <summary>
@@ -134,7 +135,7 @@ namespace Udp
                     data = new byte[1024];
                     recv = _socket.ReceiveFrom(data, ref _client);
 
-                    MessageReceived(Encoding.ASCII.GetString(data, 0, recv));
+                    Receive(Encoding.ASCII.GetString(data, 0, recv));
                 }
             }
             catch (SocketException e)
@@ -143,12 +144,12 @@ namespace Udp
                 if (e.ErrorCode == 10051)
                 {
                     string msg = "Client is unreachable, check the ip or port " + e.ErrorCode;
-                    OnClientError?.Invoke(msg);
+                    OnClientError.Invoke(msg);
                     Log(msg);
                 }
                 else if (e.ErrorCode == 10054)
                 {
-                    OnClientError?.Invoke(e.Message);
+                    OnClientError.Invoke(e.Message);
                     Log(e.Message);
                 }
                 else if (e.ErrorCode == 10048) //Address already in use
