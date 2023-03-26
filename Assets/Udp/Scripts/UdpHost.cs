@@ -14,6 +14,7 @@ namespace Udp
     {
         public UnityEvent<string> OnReceive;
         public UnityEvent<string> OnClientError;
+        public UnityEvent OnConnected;
 
         [SerializeField, Tooltip("Set to true if you want the debug logs to show in the console")] 
         protected bool _consoleLogsEnabled = false;
@@ -128,7 +129,11 @@ namespace Udp
                 _socket.SendTo(data, data.Length, SocketFlags.None, _client);
 
                 _connected = _socket.Connected;
-                if (_connected) Log("Connected to client");
+                if (_connected)
+                {
+                    OnConnected.Invoke();
+                    Log("Connected to client");
+                }
 
                 while (_connected)
                 {
