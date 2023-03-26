@@ -15,6 +15,7 @@ namespace Udp
         public UnityEvent<string> OnReceive;
         public UnityEvent<string> OnClientError;
         public UnityEvent OnConnected;
+        public UnityEvent OnDisconnected;
 
         [SerializeField, Tooltip("Set to true if you want the debug logs to show in the console")] 
         protected bool _consoleLogsEnabled = false;
@@ -57,7 +58,15 @@ namespace Udp
         /// </summary>
         public virtual void Close()
         {
-            _connected = false; //Set to false, the thread will handle the rest
+            if (_socket == null)
+                return;
+
+            Log("Closing...");
+            if (_socket.Connected) _socket.Shutdown(SocketShutdown.Both);
+            _socket.Close();
+            _connected = false;
+
+            OnDisconnected.Invoke();
         }
 
         #region Settings
@@ -169,11 +178,8 @@ namespace Udp
             }
             finally
             {
-                //Cleanup
-                Log("Closing...");
-                if (_socket.Connected) _socket.Shutdown(SocketShutdown.Both);
-                _socket.Close();
-                _connected = _socket.Connected;
+                //Close the socket
+                Close();
             }
             
         }

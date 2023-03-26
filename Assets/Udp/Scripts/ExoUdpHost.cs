@@ -48,6 +48,7 @@ namespace Exo
         }
     }
 
+    [Serializable]
     public class ExoEntry
     {
         public float Value { get; set; }
