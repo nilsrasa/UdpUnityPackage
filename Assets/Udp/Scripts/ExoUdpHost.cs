@@ -11,7 +11,7 @@ namespace Exo
 
         public float ElbowValue => _elbowValue;
 
-        private float _elbowValue, _wristValue;
+        private float _elbowValue;
 
 
         public override void Receive(string message)
